@@ -5,7 +5,7 @@ use tracing::error;
 use crate::{models::{Todo, NewTodo}, types::{ServerState, ServerResult, ServerError}};
 use diesel::r2d2;
 
-#[get("/todos")]
+#[get("/")]
 pub async fn get_todos(state: Data<ServerState>) -> ServerResult {
     use crate::schema::todos::dsl::*;
     let conn = &mut state.connection_pool.get()?;
@@ -25,7 +25,7 @@ pub async fn get_todos(state: Data<ServerState>) -> ServerResult {
 //     result.map(Json)
 // }
 
-#[delete("/todos/{todo_id}")]
+#[delete("/{todo_id}")]
 pub async fn delete_todo(todo_id: web::Path<i32>, state: Data<ServerState>) -> ServerResult {
     use crate::schema::todos::dsl::*;
     let conn = &mut state.connection_pool.get()?;
@@ -42,14 +42,20 @@ pub async fn delete_todo(todo_id: web::Path<i32>, state: Data<ServerState>) -> S
     }
 }
 
-// #[post("/create", format = "json", data = "<new_todo>")]
-// pub async fn create_todo(conn: DbConnection, new_todo: Json<NewTodo>) -> Json<Todo> {
-//     use diesel::prelude::*;
-//     let res = conn.run(move |c| {
-//         diesel::insert_into(crate::schema::todos::table)
-//             .values(&*new_todo)
-//             .get_result::<Todo>(c)
-//             .expect("Error saving new todo")
-//     }).await;
-//     Json(res)
-// }
+#[post("/new")]
+pub async fn create_todo(new_todo: web::Json<NewTodo>, state: Data<ServerState>) -> ServerResult {
+    use crate::schema::todos::dsl::*;
+    let conn = &mut state.connection_pool.get()?;
+
+    // Create the new Todo item
+    let new_todo_item = NewTodo {
+        text: new_todo.text.clone()
+    };
+
+    // Insert into database (using Diesel ORM in this example)
+    let inserted_todo = diesel::insert_into(todos)
+        .values(&new_todo_item)
+        .get_result::<Todo>(conn)?;
+
+    Ok(HttpResponse::Created().json(inserted_todo))
+}

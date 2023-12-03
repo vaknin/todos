@@ -16,6 +16,5 @@ pub struct Todo {
 #[diesel(table_name = crate::schema::todos)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct NewTodo {
-    pub text: String,
-    pub completed: bool, // Defaults to FALSE, but can be set explicitly
+    pub text: String
 }

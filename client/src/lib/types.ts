@@ -5,3 +5,7 @@ interface TodoItem {
     created_at: string;
     updated_at: string | null;
 }
+
+interface NewTodo {
+    text: string;
+}

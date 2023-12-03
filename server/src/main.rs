@@ -1,6 +1,6 @@
 #![allow(dead_code, unused_variables, unused_imports)]
 use std::ffi::c_long;
-use crate::{models::{NewTodo, Todo}, routes::delete_todo};
+use crate::{models::{NewTodo, Todo}, routes::{delete_todo, create_todo}};
 use actix_cors::Cors;
 use actix_web::{web, App, HttpServer, Responder};
 use helpers::initiate_server;
@@ -23,12 +23,10 @@ async fn main() -> std::io::Result<()> {
         App::new()
         .wrap(Cors::permissive())
         .app_data(state.clone())
-            // .service(create_todo)
+            .service(create_todo)
             .service(get_todos)
-
-            // .service(get_todo)
-            // .service(update_todo)
             .service(delete_todo)
+            // .service(update_todo)
     })
     .bind(address)?
     .run()
