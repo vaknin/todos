@@ -1,0 +1,41 @@
+services:
+
+  # Rust
+  server:
+    build: server
+    ports:
+      - 8080:8080
+    depends_on:
+      - db
+    env_file:
+      - server/.env
+
+  # Svelte
+  # client:
+  #   build: client
+  #   ports:
+  #     - 3000:5173
+  #   depends_on:
+  #     - server
+
+  # PostgreSQL
+  db:
+    image: postgres:13-bookworm
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - todo_postgres_data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+
+  # PhpMyAdmin
+  # adminer:
+  #   image: adminer
+  #   depends_on:
+  #     - db
+  #   ports:
+  #     - 8081:8080
+
+volumes:
+  todo_postgres_data:
