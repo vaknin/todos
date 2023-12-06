@@ -1,8 +1,8 @@
-use actix_web::{get, post, delete, HttpResponse, web::{Data, self}};
+use actix_web::{get, post, delete, put, HttpResponse, web::{Data, self}};
 // use anyhow::Context;
 use diesel::{RunQueryDsl, QueryDsl, ExpressionMethods};
 use tracing::error;
-use crate::{models::{Todo, NewTodo}, types::{ServerState, ServerResult, ServerError}};
+use crate::{models::{Todo, NewTodo, UpdateTodoRequest}, types::{ServerState, ServerResult, ServerError}};
 use diesel::r2d2;
 
 #[get("/")]
@@ -13,17 +13,16 @@ pub async fn get_todos(state: Data<ServerState>) -> ServerResult {
     Ok(HttpResponse::Ok().json(results))
 }
 
-// #[put("/todos/<todo_id>", format = "json", data = "<todo_update>")]
-// pub async fn update_todo(conn: DbConnection, todo_id: i32, todo_update: Json<NewTodo>) -> Option<Json<Todo>> {
-//     use crate::schema::todos::dsl::*;
-//     let result = conn.run(move |c| {
-//         diesel::update(todos.find(todo_id))
-//             .set(&*todo_update)
-//             .get_result::<Todo>(c)
-//             .ok()
-//     }).await;
-//     result.map(Json)
-// }
+#[put("/{todo_id}")]
+pub async fn update_todo(todo_id: web::Path<i32>, update: web::Json<UpdateTodoRequest>, state: Data<ServerState>) -> ServerResult {
+    use crate::schema::todos::dsl::*;
+    let conn = &mut state.connection_pool.get()?;
+
+    diesel::update(todos.filter(id.eq(todo_id.into_inner())))
+        .set(update.into_inner())
+        .execute(conn)?;
+    Ok(HttpResponse::Ok().finish())
+}
 
 #[delete("/{todo_id}")]
 pub async fn delete_todo(todo_id: web::Path<i32>, state: Data<ServerState>) -> ServerResult {

@@ -3,9 +3,13 @@ interface TodoItem {
     text: string;
     completed: boolean;
     created_at: string;
-    updated_at: string | null;
 }
 
 interface NewTodo {
     text: string;
+}
+
+interface UpdateTodoRequest {
+    text?: string;
+    completed?: boolean;
 }

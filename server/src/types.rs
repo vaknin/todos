@@ -1,6 +1,7 @@
 use std::net::SocketAddr;
 use actix_web::{ResponseError, HttpResponse};
-use diesel::{r2d2::{Pool, ConnectionManager}, PgConnection};
+use diesel::{r2d2::{Pool, ConnectionManager}, PgConnection, AsChangeset};
+use serde::Deserialize;
 
 pub struct ServerState {
     pub server_address: SocketAddr,

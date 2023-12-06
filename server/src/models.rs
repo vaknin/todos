@@ -18,3 +18,11 @@ pub struct Todo {
 pub struct NewTodo {
     pub text: String
 }
+
+#[derive(Insertable, Deserialize, AsChangeset)]
+#[diesel(table_name = crate::schema::todos)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+pub struct UpdateTodoRequest {
+    pub text: Option<String>,
+    pub completed: Option<bool>
+}

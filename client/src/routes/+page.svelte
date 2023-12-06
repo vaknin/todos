@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 	import Todo from "../Todo.svelte";
-    import {createTodo, handleDelete} from "../lib/functions";
+    import {createTodo, getTodos, handleDeleteRequest} from "../lib/functions";
     const URL = "http://localhost:8080";
 
     let todos: TodoItem[] = [];
@@ -13,52 +13,66 @@
     function toggleForm() { showForm = !showForm }
 
     onMount(async () => {
-        const response = fetch(URL)
-        .then(async response => {
-            todos = await response.json();
-        })
-        .catch(e => {
-            console.log("error fetching: ", e);
-        })
-        .finally(() => {
-            loading = false;
-        });
+        await refresh();
     });
+
+    async function refresh() {
+        const result = await getTodos();
+        [todos, loading] = result;
+    }
+
+    async function handleUpdateEvent(event: CustomEvent) {
+        const { id, text, completed } = event.detail;
+        let update: UpdateTodoRequest = {
+            completed, text
+        };
+
+        let r = await fetch(`${URL}/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(update)
+        });
+        await refresh();
+    }
+
+    async function handleDeleteEvent(e: CustomEvent) {
+        await handleDeleteRequest(e);
+        await refresh();
+    }
+
 </script>
 
 <!-- Title -->
-<h1 class="text-6xl font-bold p-6 text-center select-none">Todos</h1>
+<h1 class="text-4xl md:text-6xl font-bold text-gray-800 p-6 text-center select-none">Todos</h1>
 
 <!-- Main Container -->
-<div class="flex flex-col items-center justify-start min-h-screen">
+<div class="flex flex-col items-center justify-start min-h-screen bg-gray-50">
     <!-- Create Todo Button -->
     <div class="w-full flex justify-center p-4">
-        <button class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded" on:click={toggleForm}>
+        <button class="bg-teal-500 hover:bg-teal-400 text-white font-bold py-2 px-4 rounded-full text-xl" on:click={toggleForm}>
             +
         </button>
     </div>
 
     <!-- Todo items -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-6 gap-4 p-4 max-h-screen overflow-hidden">
-        {#each todos as todo}
-            <Todo
-                on:deleteTodo={async e => {
-                    let deleted = await handleDelete(e);
-                    if (deleted) {
-                        todos = todos.filter(t => e.detail.id != t.id);
-                    }
-                }}
-                {todo}
-            />
-        {/each}
-        {#if !loading && todos.length == 0}
-            <div class="text-xl font-bold p-3 text-center mb-5 col-span-full">
-                <p>No Entries</p>
-            </div>
-        {/if}
+    <div class="w-full max-w-6xl px-4 py-2">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {#each todos as todo}
+                <Todo
+                    on:deleteTodo={handleDeleteEvent}
+                    on:updateTodo={handleUpdateEvent}
+                    {todo}
+                />
+            {/each}
+            {#if !loading && todos.length == 0}
+                <div class="text-lg font-semibold p-3 text-center col-span-full">
+                    <p>No Entries</p>
+                </div>
+            {/if}
+        </div>
     </div>
-
 </div>
+
 
 <!-- Create Todo Form -->
 {#if showForm}

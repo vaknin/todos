@@ -1,9 +1,24 @@
 const URL = "http://localhost:8080";
 
-export async function handleDelete(event: CustomEvent): Promise<boolean> {
+export async function getTodos(): Promise<[TodoItem[], boolean]> {
+    let todos: TodoItem[] = [];
+    let loading: boolean = true;
+    await fetch(URL)
+    .then(async response => {
+        todos = await response.json();
+    })
+    .catch(e => {
+        console.log("error fetching: ", e);
+    })
+    .finally(() => {
+        loading = false;
+    });
+    return [todos, loading];
+}
+
+export async function handleDeleteRequest(event: CustomEvent): Promise<boolean> {
     const todoId = event.detail.id;
     try {
-        console.log(`attempting to delete: ${URL}/${todoId}`);
         const response = await fetch(`${URL}/${todoId}`, {
             method: 'DELETE'
         });
